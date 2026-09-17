@@ -26,7 +26,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
           <div className="max-w-3xl">
             <p className="text-sm font-bold tracking-[0.2em] text-blue-600">
-              FOR MEN'S KARAOKE
+              FOR MEN&apos;S KARAOKE
             </p>
 
             <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight md:text-6xl">
@@ -193,6 +193,22 @@ export default function Home() {
           <p className="mt-1 text-sm text-zinc-500">
             自分の声に、歌える曲をマッチ。
           </p>
+
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-zinc-100 pt-5">
+            <Link
+              href="/privacy"
+              className="text-xs font-medium text-zinc-500 transition hover:text-blue-600"
+            >
+              プライバシーポリシー
+            </Link>
+
+            <Link
+              href="/contact"
+              className="text-xs font-medium text-zinc-500 transition hover:text-blue-600"
+            >
+              お問い合わせ
+            </Link>
+          </div>
         </div>
       </footer>
     </main>
