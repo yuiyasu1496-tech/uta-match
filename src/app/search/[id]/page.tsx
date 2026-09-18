@@ -1,15 +1,6 @@
 import Link from "next/link";
 import { songs } from "@/data/songs";
 
-/*
- * Uta-Matchで使用する音階の順番。
- *
- * Aを境に、
- *
- * low → mid1 → mid2 → hi → hihi
- *
- * と接頭辞が切り替わる。
- */
 const noteOrder = [
   "lowC",
   "lowC#",
@@ -66,9 +57,6 @@ const noteOrder = [
   "hihiC",
 ];
 
-/*
- * 音階を数直線上の位置に変換する。
- */
 function getNotePercentage(note: string) {
   const position = noteOrder.indexOf(note);
 
@@ -102,29 +90,51 @@ function Rating({
   );
 }
 
-/*
- * 音域表示。
- *
- * 青いバー = 地声の音域
- * オレンジの点 = 裏声最高音
- */
+function RangeItem({
+  label,
+  value,
+  type,
+}: {
+  label: string;
+  value: string;
+  type: "ground" | "falsetto";
+}) {
+  return (
+    <div className="rounded-2xl bg-zinc-50 px-4 py-4 text-center">
+      <p className="text-xs font-bold text-zinc-500">
+        {label}
+      </p>
+
+      <p
+        className={`mt-1 text-lg font-black ${
+          type === "ground"
+            ? "text-blue-600"
+            : "text-orange-500"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function VocalRangeBar({
   lowestNote,
   highestNote,
+  falsettoLowestNote,
   falsettoHighestNote,
 }: {
   lowestNote: string;
   highestNote: string;
-  falsettoHighestNote: string;
+  falsettoLowestNote: string | null;
+  falsettoHighestNote: string | null;
 }) {
   const lowestLeft = getNotePercentage(lowestNote);
   const highestLeft = getNotePercentage(highestNote);
-  const falsettoLeft = getNotePercentage(falsettoHighestNote);
 
   if (
     lowestLeft === null ||
-    highestLeft === null ||
-    falsettoLeft === null
+    highestLeft === null
   ) {
     return (
       <div className="mt-8 rounded-2xl bg-zinc-50 px-5 py-6 text-sm text-zinc-500">
@@ -133,77 +143,149 @@ function VocalRangeBar({
     );
   }
 
-  const rangeWidth = Math.max(
+  const groundRangeWidth = Math.max(
     highestLeft - lowestLeft,
     0,
   );
 
+  const hasFalsetto =
+    falsettoLowestNote !== null &&
+    falsettoHighestNote !== null;
+
+  const falsettoLowestLeft = hasFalsetto
+    ? getNotePercentage(falsettoLowestNote)
+    : null;
+
+  const falsettoHighestLeft = hasFalsetto
+    ? getNotePercentage(falsettoHighestNote)
+    : null;
+
+  const canDisplayFalsettoRange =
+    hasFalsetto &&
+    falsettoLowestLeft !== null &&
+    falsettoHighestLeft !== null;
+
+  const falsettoRangeWidth =
+    canDisplayFalsettoRange
+      ? Math.max(
+          falsettoHighestLeft - falsettoLowestLeft,
+          0,
+        )
+      : 0;
+
   return (
-    <div className="mt-10">
-      <div className="relative h-10">
-        <div
-          className="absolute bottom-0 -translate-x-1/2 text-sm font-black text-blue-600"
-          style={{
-            left: `${lowestLeft}%`,
-          }}
-        >
-          {lowestNote}
-        </div>
-
-        <div
-          className="absolute bottom-0 -translate-x-1/2 text-sm font-black text-blue-600"
-          style={{
-            left: `${highestLeft}%`,
-          }}
-        >
-          {highestNote}
-        </div>
-
-        <div
-          className="absolute bottom-0 -translate-x-1/2 text-sm font-black text-orange-500"
-          style={{
-            left: `${falsettoLeft}%`,
-          }}
-        >
-          {falsettoHighestNote}
-        </div>
-      </div>
-
-      <div className="relative mt-3 h-8">
-        <div className="absolute left-0 top-1/2 h-4 w-full -translate-y-1/2 rounded-full bg-zinc-100" />
-
-        <div
-          className="absolute top-1/2 h-4 -translate-y-1/2 rounded-full bg-blue-500"
-          style={{
-            left: `${lowestLeft}%`,
-            width: `${rangeWidth}%`,
-          }}
-        />
-
-        <div
-          className="absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-orange-500 shadow-sm"
-          style={{
-            left: `${falsettoLeft}%`,
-          }}
-        />
-      </div>
-
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-8 rounded-full bg-blue-500" />
-
-          <span className="text-sm font-bold text-zinc-600">
+    <div className="mt-8">
+      {/* 地声 */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm font-black text-blue-600">
             地声
           </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="h-4 w-4 rounded-full bg-orange-500 ring-2 ring-orange-100" />
 
           <span className="text-sm font-bold text-zinc-600">
-            裏声最高音
+            {lowestNote} 〜 {highestNote}
           </span>
         </div>
+
+        <div className="relative h-7">
+          <div className="absolute left-0 top-1/2 h-3 w-full -translate-y-1/2 rounded-full bg-zinc-100" />
+
+          <div
+            className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-blue-500"
+            style={{
+              left: `${lowestLeft}%`,
+              width: `${groundRangeWidth}%`,
+            }}
+          />
+
+          <div
+            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-blue-600 shadow-sm"
+            style={{
+              left: `${lowestLeft}%`,
+            }}
+          />
+
+          <div
+            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-blue-600 shadow-sm"
+            style={{
+              left: `${highestLeft}%`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 裏声 */}
+      <div className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm font-black text-orange-500">
+            裏声
+          </span>
+
+          <span className="text-sm font-bold text-zinc-600">
+            {canDisplayFalsettoRange
+              ? `${falsettoLowestNote} 〜 ${falsettoHighestNote}`
+              : "使用なし"}
+          </span>
+        </div>
+
+        {canDisplayFalsettoRange ? (
+          <div className="relative h-7">
+            <div className="absolute left-0 top-1/2 h-3 w-full -translate-y-1/2 rounded-full bg-zinc-100" />
+
+            <div
+              className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-orange-400"
+              style={{
+                left: `${falsettoLowestLeft}%`,
+                width: `${falsettoRangeWidth}%`,
+              }}
+            />
+
+            <div
+              className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-orange-500 shadow-sm"
+              style={{
+                left: `${falsettoLowestLeft}%`,
+              }}
+            />
+
+            <div
+              className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-orange-500 shadow-sm"
+              style={{
+                left: `${falsettoHighestLeft}%`,
+              }}
+            />
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-orange-50 px-5 py-4 text-sm font-bold text-orange-500">
+            この曲では裏声を使用しません
+          </div>
+        )}
+      </div>
+
+      {/* 音域データ */}
+      <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <RangeItem
+          label="地声最低音"
+          value={lowestNote}
+          type="ground"
+        />
+
+        <RangeItem
+          label="地声最高音"
+          value={highestNote}
+          type="ground"
+        />
+
+        <RangeItem
+          label="裏声最低音"
+          value={falsettoLowestNote ?? "使用なし"}
+          type="falsetto"
+        />
+
+        <RangeItem
+          label="裏声最高音"
+          value={falsettoHighestNote ?? "使用なし"}
+          type="falsetto"
+        />
       </div>
     </div>
   );
@@ -323,7 +405,6 @@ export default async function SongPage({
               {song.artist}
             </p>
 
-            {/* 基本情報 */}
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-zinc-600 shadow-sm">
                 {song.releaseYear}
@@ -338,7 +419,7 @@ export default async function SongPage({
       </section>
 
       <div className="mx-auto max-w-6xl px-6 pb-20 md:pb-24">
-        {/* 歌いやすさ */}
+        {/* 歌唱難易度 */}
         <section className="-mt-2 rounded-3xl border border-blue-100 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
@@ -347,7 +428,7 @@ export default async function SongPage({
               </p>
 
               <h2 className="mt-2 text-2xl font-black">
-                歌いやすさ
+                歌唱難易度
               </h2>
 
               <p className="mt-2 text-sm text-zinc-500">
@@ -369,20 +450,35 @@ export default async function SongPage({
             </div>
           </div>
 
-          <div className="mt-7 grid gap-3 md:grid-cols-3">
+          <div className="mt-7 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             <DifficultyItem
-              label="スタミナ"
-              value={song.stamina}
+              label="地声高音頻度"
+              value={song.highNoteFrequency}
             />
 
             <DifficultyItem
-              label="肺活量"
+              label="高音ロングトーン"
+              value={song.highNoteLongTone}
+            />
+
+            <DifficultyItem
+              label="ブレス"
               value={song.breath}
             />
 
             <DifficultyItem
-              label="早口"
+              label="滑舌"
               value={song.fastLyrics}
+            />
+
+            <DifficultyItem
+              label="音程変化"
+              value={song.pitchMovement}
+            />
+
+            <DifficultyItem
+              label="リズム"
+              value={song.rhythm}
             />
           </div>
         </section>
@@ -399,13 +495,14 @@ export default async function SongPage({
             </h2>
 
             <p className="mt-2 text-sm text-zinc-500">
-              この曲で使用される音域
+              この曲で使用される地声・裏声の音域
             </p>
           </div>
 
           <VocalRangeBar
             lowestNote={song.lowestNote}
             highestNote={song.highestNote}
+            falsettoLowestNote={song.falsettoLowestNote}
             falsettoHighestNote={song.falsettoHighestNote}
           />
         </section>
@@ -420,14 +517,21 @@ export default async function SongPage({
             Uta-Match分析
           </h2>
 
-          <div className="mt-6 rounded-2xl bg-blue-50/70 p-6">
-            <p className="leading-8 text-zinc-700">
-              {song.analysis}
-            </p>
-          </div>
+          {song.analysis ? (
+            <div className="mt-6 rounded-2xl bg-blue-50/70 p-6">
+              <p className="leading-8 text-zinc-700">
+                {song.analysis}
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-2xl bg-zinc-50 p-6">
+              <p className="text-sm font-medium text-zinc-400">
+                分析データは準備中です。
+              </p>
+            </div>
+          )}
         </section>
 
-        {/* 曲を探す */}
         <div className="mt-10 text-center">
           <Link
             href="/search"
